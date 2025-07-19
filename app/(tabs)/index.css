@@ -1,0 +1,70 @@
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Roboto&display=swap');
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background-color: #121212;
+  color: white; /* ✅ Changed from #e0e0e0 */
+  font-family: 'Roboto', sans-serif;
+  display: flex;
+  justify-content: center;
+  padding: 30px 10px;
+}
+
+.container {
+  background-color: #1e1e1e;
+  padding: 30px 25px;
+  border-radius: 12px;
+  max-width: 420px;
+  width: 100%;
+  box-shadow: 0 0 20px rgba(0, 255, 128, 0.4);
+}
+
+h1 {
+  font-family: 'Orbitron', sans-serif;
+  text-align: center;
+  font-size: 2.8rem;
+  margin-bottom: 25px;
+  color: white; /* ✅ Changed from #00ff85 */
+  letter-spacing: 2px;
+}
+
+.toggle-label {
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: white; /* ✅ Changed */
+  margin-bottom: 10px;
+  display: block;
+}
+
+label {
+  display: block;
+  margin-top: 20px;
+  font-weight: 600;
+  color: white; /* ✅ Changed */
+  font-size: 1.1rem;
+}
+
+select {
+  background-color: #121212;
+  color: white; /* ✅ Changed */
+  border: 2px solid white; /* ✅ Optional */
+}
+
+select:disabled {
+  border-color: #444;
+  color: #999; /* ✅ Light gray for disabled */
+  background-color: #222;
+  cursor: not-allowed;
+}
+
+.info h3 {
+  color: white; /* ✅ Changed */
+}
+
+.info ul li {
+  border-bottom: 1px solid #ffffff33; /* ✅ subtle white border */
+}

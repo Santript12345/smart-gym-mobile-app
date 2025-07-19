@@ -37,6 +37,13 @@
     ],
     "experiments": {
       "typedRoutes": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "0733b350-9ed4-4029-b25f-3bdf98df8a5d"
+      }
+    },
+    "owner": "santriptmishra"
   }
 }
