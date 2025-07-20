@@ -9,7 +9,7 @@ export function FirebaseAuthListener() {
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (!user) router.replace('/login');
+      if (!user) router.replace('./index');
     });
 
     return unsubscribe;

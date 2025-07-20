@@ -1,6 +1,9 @@
+import { useRouter } from "expo-router";
 import { onValue, ref } from "firebase/database";
 import React, { useEffect, useState } from "react";
 import {
+    Alert,
+    Button,
     Dimensions,
     FlatList,
     ScrollView,
@@ -8,7 +11,7 @@ import {
     Text,
     View,
 } from "react-native";
-import { db } from "../../firebase";
+import { auth, db } from "../../firebase";
 
 type CheckInEntry = {
   id: string;
@@ -20,14 +23,26 @@ type CheckInEntry = {
 type UsersMap = {
   [uid: string]: {
     name: string;
+    role?: string;
   };
 };
 
 export default function AdminScreen() {
+  const user = auth.currentUser;
   const [checkIns, setCheckIns] = useState<CheckInEntry[]>([]);
   const [users, setUsers] = useState<UsersMap>({});
+  const [isAdmin, setIsAdmin] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
+    if (!user) return;
+
+    const userRef = ref(db, `users/${user.uid}`);
+    onValue(userRef, (snapshot) => {
+      const userData = snapshot.val();
+      setIsAdmin(userData?.role === "admin");
+    });
+
     const checkInsRef = ref(db, "check-ins");
     const unsubscribeCheckIns = onValue(checkInsRef, (snapshot) => {
       const data = snapshot.val();
@@ -57,7 +72,17 @@ export default function AdminScreen() {
       unsubscribeCheckIns();
       unsubscribeUsers();
     };
-  }, []);
+  }, [user]);
+
+  const handleLogout = async () => {
+    try {
+      await auth.signOut();
+      Alert.alert("👋 Logged Out", "You have been signed out.");
+      router.replace("/");
+    } catch (error: any) {
+      Alert.alert("Error", error.message);
+    }
+  };
 
   const renderItem = ({ item }: { item: CheckInEntry }) => {
     const name =
@@ -100,18 +125,24 @@ export default function AdminScreen() {
           </View>
         </ScrollView>
       )}
+
+      {user && isAdmin && (
+        <View style={styles.logoutButton}>
+          <Button title="🚪 Logout" onPress={handleLogout} color="#d9534f" />
+        </View>
+      )}
     </ScrollView>
   );
 }
 
-const screenWidth = Dimensions.get('window').width;
+const screenWidth = Dimensions.get("window").width;
 
 const styles = StyleSheet.create({
   container: {
     padding: 16,
     paddingTop: 120,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     backgroundColor: "#fff",
     flexGrow: 1,
   },
@@ -122,7 +153,7 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   table: {
-    minWidth: screenWidth * 0.98, // allow horizontal scroll
+    minWidth: screenWidth * 0.98,
   },
   header: {
     flexDirection: "row",
@@ -152,5 +183,9 @@ const styles = StyleSheet.create({
     color: "#888",
     marginTop: 20,
     fontSize: 16,
+  },
+  logoutButton: {
+    marginTop: 40,
+    width: "100%",
   },
 });

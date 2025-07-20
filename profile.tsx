@@ -1,6 +1,15 @@
+import { useRouter } from "expo-router";
 import { onValue, ref, remove } from "firebase/database";
 import React, { useEffect, useState } from "react";
-import { FlatList, ScrollView, StyleSheet, Text, View } from "react-native";
+import {
+    Alert,
+    Button,
+    FlatList,
+    ScrollView,
+    StyleSheet,
+    Text,
+    View,
+} from "react-native";
 import { auth, db } from "../../firebase";
 
 type CheckInEntry = {
@@ -13,9 +22,22 @@ type CheckInEntry = {
 export default function ProfileScreen() {
   const user = auth.currentUser;
   const [userCheckIns, setUserCheckIns] = useState<CheckInEntry[]>([]);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
     if (!user) return;
+
+    // 🔍 Check if user is admin
+    const userRef = ref(db, `users/${user.uid}`);
+    onValue(userRef, (snapshot) => {
+      const data = snapshot.val();
+      if (data?.role === "admin") {
+        setIsAdmin(true);
+      } else {
+        setIsAdmin(false);
+      }
+    });
 
     const checkInsRef = ref(db, "check-ins-history");
 
@@ -27,7 +49,7 @@ export default function ProfileScreen() {
           if (!data) return setUserCheckIns([]);
 
           const now = Date.now();
-          const fiveMinutesAgo = now - 1 * 60 * 1000;
+          const fiveMinutesAgo = now - 5 * 60 * 1000;
           const filtered: CheckInEntry[] = [];
 
           Object.entries(data).forEach(([id, details]: [string, any]) => {
@@ -46,20 +68,24 @@ export default function ProfileScreen() {
           filtered.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
           setUserCheckIns(filtered);
         },
-        {
-          onlyOnce: true,
-        }
+        { onlyOnce: true }
       );
     };
 
-    // Initial fetch
     cleanupAndLoad();
-
-    // Refresh every 30 seconds
     const interval = setInterval(cleanupAndLoad, 30 * 1000);
-
     return () => clearInterval(interval);
   }, [user]);
+
+  const handleLogout = async () => {
+    try {
+      await auth.signOut();
+      Alert.alert("👋 Logged Out", "You have been signed out.");
+      router.replace("/"); // Navigate back to login
+    } catch (error: any) {
+      Alert.alert("Error", error.message);
+    }
+  };
 
   const renderItem = ({ item }: { item: CheckInEntry }) => (
     <View style={styles.row}>
@@ -80,14 +106,18 @@ export default function ProfileScreen() {
           Last Login: {user?.metadata?.lastSignInTime}
         </Text>
 
-        <Text style={styles.sectionTitle}>Check-In History (Last 5 Minutes)</Text>
+        <Text style={styles.sectionTitle}>
+          Check-In History (Last 5 Minutes)
+        </Text>
 
         {userCheckIns.length === 0 ? (
           <Text style={styles.emptyText}>No recent check-ins.</Text>
         ) : (
           <View style={styles.table}>
             <View style={styles.header}>
-              <Text style={[styles.cell, styles.headerCell]}>Muscle Group</Text>
+              <Text style={[styles.cell, styles.headerCell]}>
+                Muscle Group
+              </Text>
               <Text style={[styles.cell, styles.headerCell]}>Time</Text>
             </View>
 
@@ -96,6 +126,13 @@ export default function ProfileScreen() {
               renderItem={renderItem}
               keyExtractor={(item) => item.id}
             />
+          </View>
+        )}
+
+        {/* ✅ Show logout only if user is NOT admin */}
+        {user && !isAdmin && (
+          <View style={styles.logoutButton}>
+            <Button title="🚪 Logout" onPress={handleLogout} color="#d9534f" />
           </View>
         )}
       </View>
@@ -164,5 +201,9 @@ const styles = StyleSheet.create({
     color: "#888",
     textAlign: "center",
     marginTop: 20,
+  },
+  logoutButton: {
+    marginTop: 40,
+    width: "100%",
   },
 });
